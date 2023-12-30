@@ -15,7 +15,7 @@ const CardReserve = () => {
 
   function onMessage(message: Paho.Message) {
     if (message.destinationName === 'Distance') {
-      setTankCapacity(parseInt(message.payloadString || '25', 10));
+      setTankCapacity(parseInt(message.payloadString || '0', 10));
     }
   }
 

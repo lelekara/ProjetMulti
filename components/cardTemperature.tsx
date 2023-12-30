@@ -14,7 +14,7 @@ const CardTemperature = () => {
 
   function onMessage(message: Paho.Message) {
     if (message.destinationName === 'Temperature') {
-      setTemperature(parseInt(message.payloadString || '15', 10));
+      setTemperature(parseInt(message.payloadString || '0', 10));
     }
   }
 
