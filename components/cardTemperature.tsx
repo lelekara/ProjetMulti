@@ -1,7 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, ScrollView, StyleSheet, Image, Text } from 'react-native';
-import * as Progress from 'react-native-progress';
-
 export default function CardTemperature () {
 return (
   <>
