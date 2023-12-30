@@ -11,6 +11,7 @@ const client = new Paho.Client(
 
 const CardHumidity = () => {
   const [humidity, setHumidity] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
 
   function onMessage(message: Paho.Message) {
     if (message.destinationName === 'Moisure') {
@@ -25,26 +26,30 @@ const CardHumidity = () => {
 
   useEffect(() => {
     function connectToMqtt() {
-      client.connect({
-        onSuccess: () => {
-          console.log('Connected!');
-          subscribeToMoisure();
-        },
-        onFailure: () => {
-          console.log('Failed to connect!');
-        },
-      });
+      if (!isConnected) {
+        client.connect({
+          onSuccess: () => {
+            console.log('Connected!');
+            setIsConnected(true);
+            subscribeToMoisure();
+          },
+          onFailure: () => {
+            console.log('Failed to connect!');
+          },
+        });
+      }
     }
 
     connectToMqtt();
 
     // Clean up function for disconnecting when the component unmounts
     return () => {
-      if (client.isConnected()) {
+      if (isConnected) {
         client.disconnect();
+        setIsConnected(false);
       }
     };
-  }, []); // Empty dependency array means this effect will only run once on mount
+  }, [isConnected]);
 
   return (
     <ScrollView>
