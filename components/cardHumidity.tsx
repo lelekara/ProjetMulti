@@ -14,13 +14,13 @@ const CardHumidity = () => {
   const [isConnected, setIsConnected] = useState(false);
 
   function onMessage(message: Paho.Message) {
-    if (message.destinationName === 'Moisure') {
+    if (message.destinationName === 'Moisture') {
       setHumidity(parseInt(message.payloadString || '0', 10));
     }
   }
 
-  function subscribeToMoisure() {
-    client.subscribe('Moisure');
+  function subscribeToMoisture() {
+    client.subscribe('Moisture');
     client.onMessageArrived = onMessage;
   }
 
@@ -31,7 +31,7 @@ const CardHumidity = () => {
           onSuccess: () => {
             console.log('Connected!');
             setIsConnected(true);
-            subscribeToMoisure();
+            subscribeToMoisture();
           },
           onFailure: () => {
             console.log('Failed to connect!');

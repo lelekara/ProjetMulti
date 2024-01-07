@@ -84,7 +84,7 @@ export default function CardWaterButton() {
     <>
       <ScrollView>
         <View style={styles.container}>
-        <Text>Water</Text>
+        <Text>Activate the pump</Text>
           <View style={styles.button}>
             <Button title="ON" onPress={publishToWaterOn} />
             <Button title="OFF" onPress={publishToWaterOff} />
