@@ -55,7 +55,10 @@ const CardHumidity = () => {
     <ScrollView>
       <View style={styles.container}>
         <Text style={styles.title}>Humidity</Text>
-        <Progress.Bar style={styles.progress} progress={humidity / 100} width={150} />
+        <Progress.Bar style={styles.progress}
+        progress={humidity / 100}
+        width={200}
+        height={20} />
         <Text style={styles.title}>Current Humidity: {humidity}%</Text>
       </View>
     </ScrollView>

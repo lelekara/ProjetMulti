@@ -84,7 +84,7 @@ export default function CardWaterButton() {
     <>
       <ScrollView>
         <View style={styles.container}>
-        <Text>Activate the pump</Text>
+        <Text style={styles.tittle}>Activate the pump</Text>
           <View style={styles.button}>
             <Button title="ON" onPress={publishToWaterOn} />
             <Button title="OFF" onPress={publishToWaterOff} />
@@ -113,5 +113,12 @@ const styles = StyleSheet.create({
     marginLeft: '5%',
     marginRight: '5%',
     color: 'black',
+  },
+  tittle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 20,
   },
 });

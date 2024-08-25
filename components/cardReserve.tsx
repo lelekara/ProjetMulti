@@ -55,7 +55,10 @@ const CardReserve = () => {
     <ScrollView>
       <View style={styles.container}>
         <Text style={styles.title}>Capacity Tank</Text>
-        <Progress.Bar style={styles.progress} progress={tankCapacity / 100} width={320} />
+        <Progress.Bar style={styles.progress} 
+        width={360}
+        height={20}
+        progress={tankCapacity / 100}/>
         <Text style={styles.title}>{tankCapacity}%</Text>
       </View>
     </ScrollView>
