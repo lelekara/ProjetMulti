@@ -1,84 +1,93 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
-
-interface SensorData {
-  source: string;
-  value: number;
-  date_time: string;
-}
+import { View, Text, FlatList, StyleSheet, ScrollView, ImageBackground } from 'react-native';
+import { Picker } from '@react-native-picker/picker';
 
 const Historique = () => {
-  const [groupedData, setGroupedData] = useState<{ [key: string]: SensorData[] }>({});
+  const [history, setHistory] = useState<any[]>([]);
+  const [selectedValue, setSelectedValue] = useState<string>('Temperature'); // Valeur par défaut sélectionnée
+
+  useEffect(() => {
+    fetch('http://192.168.1.128:3000/data')
+      .then((response) => response.json())
+      .then((data) => setHistory(data))
+      .catch((error) => console.error('Error fetching history:', error));
+  }, []);
 
   const formatDate = (dateString: string) => {
     return dateString.split('.')[0].replace('T', ' ');
   };
 
-  useEffect(() => {
-    fetch('http://192.168.1.128:3000/data')
-      .then((response) => response.json())
-      .then((data: SensorData[]) => {
-        // Regrouper les données par catégorie (source)
-        const grouped: { [key: string]: SensorData[] } = data.reduce((acc, item) => {
-          if (!acc[item.source]) {
-            acc[item.source] = [];
-          }
-          acc[item.source].push(item);
-          return acc;
-        }, {} as { [key: string]: SensorData[] });
-
-        setGroupedData(grouped);
-      })
-      .catch((error) => console.error('Error fetching history:', error));
-  }, []);
+  const filteredHistory = history.filter(item => item.source === selectedValue);
 
   return (
-    <View style={styles.container}>
+    <ImageBackground source={require('../assets/Wallpaper.jpeg')} style={styles.background}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Historique</Text>
-
-      {/* Affichage des données regroupées */}
-      {Object.keys(groupedData).map((key) => (
-        <View key={key} style={styles.categoryContainer}>
-          <Text style={styles.categoryTitle}>{key}</Text>
-          <FlatList
-            data={groupedData[key]}
-            keyExtractor={(item, index) => `${item.date_time}-${index}`}
-            renderItem={({ item }) => (
-              <Text style={styles.item}>
-                {item.date_time}: {item.value}
-                {key === 'Temperature' ? ' °C' : key === 'Humidity' ? ' %' : key === 'Distance' ? ' cm' : ' % (niveau d\'eau)'}
-              </Text>
-            )}
-          />
-        </View>
-      ))}
-    </View>
+      
+      {/* Menu déroulant pour choisir la valeur à afficher */}
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={selectedValue}
+          style={styles.picker}
+          onValueChange={(itemValue) => setSelectedValue(itemValue)}
+        >
+          <Picker.Item label="Temperature" value="Temperature" />
+          <Picker.Item label="Humidity" value="Humidity" />
+          <Picker.Item label="Tank" value="Distance" />
+          <Picker.Item label="Water Pump" value="Water" />
+        </Picker>
+      </View>
+      
+      <FlatList
+        data={filteredHistory}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={({ item }) => (
+          <Text style={styles.item}>
+            {formatDate(item.date_time)}: {item.source} : {item.value}
+          </Text>
+        )}
+      />
+    </ScrollView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 60,
+    flexGrow: 1,
+    padding: 20,
   },
   title: {
     fontSize: 24,
+    color: 'white',
     fontWeight: 'bold',
-    marginBottom: 20,
-    marginLeft: 80,
-    marginTop: 50,
+    marginLeft: '35%',
+    marginTop: 100,
   },
-  categoryContainer: {
+  pickerContainer: {
     marginBottom: 20,
+    marginTop: 10,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderRadius: 10,
+    borderWidth: 1,
+    zIndex: 10, // Priorité d'affichage du picker
   },
-  categoryTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
+  picker: {
+    height: 5,
+    width: '100%',
+    borderColor: 'white',
+    marginBottom: 150,
   },
   item: {
     fontSize: 16,
-    marginBottom: 5,
+    width: '50%',
+    color: 'white',
+    marginLeft: 100,
+    marginBottom: 10,
+  },
+  background:{ 
+    flex: 1,
+    resizeMode: "cover",
   },
 });
 
