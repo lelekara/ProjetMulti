@@ -1,175 +1,84 @@
 import React, { useEffect, useState } from 'react';
-import {Button, SafeAreaView, StyleSheet, TextInput,Alert, Keyboard, View,Text, ImageBackground, FlatList} from 'react-native';
-import Paho from "paho-mqtt";
-import * as Progress from "react-native-progress";
-import { StatusBar } from "expo-status-bar";
-import * as SQLite from "expo-sqlite";
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 
-const client = new Paho.Client(
-  "192.168.0.103", // MQTT broker IP
-  Number(9001),
-  `mqtt-async-test-${String(Math.random() * 100)}`
-);
-
+interface SensorData {
+  source: string;
+  value: number;
+  date_time: string;
+}
 
 const Historique = () => {
-  const [db, setDb] = useState(SQLite.openDatabase("example.db"));
-  const [isLoggedIn, setLoggedIn] = useState(false);
-  const [temperature, setTemperature] = useState(null);
-  const [humidity, setHumidity] = useState(null);
-  const [distance, setDistance] = useState(null);
-  const [tank, setTank] = useState(null);
+  const [groupedData, setGroupedData] = useState<{ [key: string]: SensorData[] }>({});
 
-  const [history, setHistory] = useState([]);
-
-  function onMessage(message: { payloadString: string }) {
-    try {
-      const sensorData = JSON.parse(message.payloadString);
-      setTemperature(sensorData.temperature);
-      setHumidity(sensorData.humidity);
-
-      // Save data to the SQLite database
-      db.transaction((tx) => {
-        tx.executeSql(
-          'INSERT INTO history (temperature, humidity, distance,tank, timestamp) VALUES (?, ?, ?, ?, datetime("now", "localtime"))',
-          [sensorData.temperature, sensorData.humidity, sensorData.distance,sensorData.tank]
-        );
-      });
-
-      // Update history state with the latest data
-      updateHistory();
-    } catch (error) {
-      console.error("Error parsing MQTT message:", error);
-    }
-  }
+  const formatDate = (dateString: string) => {
+    return dateString.split('.')[0].replace('T', ' ');
+  };
 
   useEffect(() => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "CREATE TABLE IF NOT EXISTS history (id INTEGER PRIMARY KEY AUTOINCREMENT, temperature REAL, humidity REAL, ppm REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)"
-      );
-    });
+    fetch('http://192.168.1.128:3000/data')
+      .then((response) => response.json())
+      .then((data: SensorData[]) => {
+        // Regrouper les données par catégorie (source)
+        const grouped: { [key: string]: SensorData[] } = data.reduce((acc, item) => {
+          if (!acc[item.source]) {
+            acc[item.source] = [];
+          }
+          acc[item.source].push(item);
+          return acc;
+        }, {} as { [key: string]: SensorData[] });
 
-    client.connect({
-      onSuccess: () => {
-        console.log("Connected!");
-        client.subscribe("Temperature");
-        client.onMessageArrived = onMessage;
-      },
-      onFailure: (error) => {
-        console.log("Failed to connect!", error);
-      },
-    });
-
-    // Load initial history data
-    updateHistory();
+        setGroupedData(grouped);
+      })
+      .catch((error) => console.error('Error fetching history:', error));
   }, []);
-
-  const updateHistory = () => {
-    db.transaction((tx) => {
-      tx.executeSql(
-        "SELECT * FROM history ORDER BY timestamp DESC",
-        [],
-        (_, result) => {
-          return setHistory(result.rows._array as never[]);
-        }
-      );
-    });
-  };
-
-  const handleLogin = (status: boolean | ((prevState: boolean) => boolean)) => {
-    setLoggedIn(status);
-  };
-
-  const handleLogout = () => {
-    setLoggedIn(false);
-  };
 
   return (
     <View style={styles.container}>
-      {isLoggedIn ? (
-        <>
-          <Text style={styles.title}>Admin View</Text>
-          <Text style={styles.value}>Live Data:</Text>
-          <Text style={styles.value}>
-            Temperature:{" "}
-            {temperature !== null ? `${temperature} °C` : "No data"}
-          </Text>
-          <Progress.Bar
-            style={styles.temperatureProgress}
-            progress={
-              temperature !== null && temperature > 0 ? temperature / 100 : 0
-            }
-            width={200}
-          />
-          <Text style={styles.value}>
-            Humidity: {humidity !== null ? `${humidity} %` : "No data"}
-          </Text>
-          {humidity !== null && (
-            <Progress.Bar
-              style={[
-                styles.humidityProgress,
-                {
-                  backgroundColor:
-                    humidity < 40 || humidity > 60 ? "red" : "green",
-                },
-              ]}
-              progress={humidity / 100}
-              width={200}
-            />
-          )}
-          <Text style={styles.value}>
-          </Text>
-          <Text style={styles.value}>History:</Text>
+      <Text style={styles.title}>Historique</Text>
+
+      {/* Affichage des données regroupées */}
+      {Object.keys(groupedData).map((key) => (
+        <View key={key} style={styles.categoryContainer}>
+          <Text style={styles.categoryTitle}>{key}</Text>
           <FlatList
-            data={history}
-            keyExtractor={(item) => item.id.toString()}
+            data={groupedData[key]}
+            keyExtractor={(item, index) => `${item.date_time}-${index}`}
             renderItem={({ item }) => (
-              <View>
-                <Text style={styles.value}>
-                  {item.timestamp} : {item.temperature} °C | Humidity:{item.humidity} % | Distance:{item.distance} cm | Tank:{item.tank} %
-                </Text>
-              </View>
+              <Text style={styles.item}>
+                {item.date_time}: {item.value}
+                {key === 'Temperature' ? ' °C' : key === 'Humidity' ? ' %' : key === 'Distance' ? ' cm' : ' % (niveau d\'eau)'}
+              </Text>
             )}
           />
-          <StatusBar style="auto" />
-          <Button title="Log Out" onPress={handleLogout} />
-        </>
-        ) : (
-        <>
-          <Text style={styles.title}>Login</Text>
-          <Button title="Log In" onPress={() => handleLogin(true)} />
-          <StatusBar style="auto" />
-        </>
-        )}
+        </View>
+      ))}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 60,
   },
   title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    marginLeft: 80,
+    marginTop: 50,
+  },
+  categoryContainer: {
+    marginBottom: 20,
+  },
+  categoryTitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: "80%",
-  },
-  value: {
-    fontSize: 18,
+  item: {
+    fontSize: 16,
     marginBottom: 5,
-  },
-  temperatureProgress: {
-    marginBottom: 15,
-  },
-  humidityProgress: {
-    marginBottom: 15,
   },
 });
 

@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import Paho from 'paho-mqtt';
 
 const client = new Paho.Client(
-  '192.168.1.103',
+  '192.168.1.128',
   Number(9001),
   `mqtt-async-test-${parseInt(Math.random() * 100)}`
 );
