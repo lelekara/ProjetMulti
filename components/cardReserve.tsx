@@ -4,7 +4,7 @@ import Paho from 'paho-mqtt';
 import * as Progress from 'react-native-progress';
 
 const client = new Paho.Client(
-  '192.168.1.128',
+  'mqtt.lelekara.me',
   Number(9001),
   `mqtt-async-test-${parseInt(Math.random() * 100)}`
 );

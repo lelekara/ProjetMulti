@@ -7,7 +7,7 @@ const Historique = () => {
   const [selectedValue, setSelectedValue] = useState<string>('Temperature'); // Valeur par défaut sélectionnée
 
   useEffect(() => {
-    fetch('http://192.168.1.128:3000/data')
+    fetch('http://192.168.1.121:3000/data')
       .then((response) => response.json())
       .then((data) => setHistory(data))
       .catch((error) => console.error('Error fetching history:', error));
