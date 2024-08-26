@@ -17,7 +17,10 @@ const Historique = () => {
     return dateString.split('.')[0].replace('T', ' ');
   };
 
-  const filteredHistory = history.filter(item => item.source === selectedValue);
+ // Filtrer et trier les données
+ const filteredHistory = history
+ .filter(item => item.source === selectedValue)
+ .sort((a, b) => new Date(b.date_time).getTime() - new Date(a.date_time).getTime());
 
   return (
     <ImageBackground source={require('../assets/Wallpaper.jpeg')} style={styles.background}>
@@ -39,14 +42,14 @@ const Historique = () => {
       </View>
       
       <FlatList
-        data={filteredHistory}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <Text style={styles.item}>
-            {formatDate(item.date_time)}: {item.source} : {item.value}
-          </Text>
-        )}
-      />
+          data={filteredHistory}
+          keyExtractor={(item, index) => index.toString()}
+          renderItem={({ item }) => (
+            <Text style={styles.item}>
+              {formatDate(item.date_time)}: {item.source} : {item.value}
+            </Text>
+          )}
+        />
     </ScrollView>
     </ImageBackground>
   );
